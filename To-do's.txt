@@ -1,0 +1,4 @@
+ - Connect Database and add data in it. - Done
+ - Angle, position speed and time of shoot should be sent through database.
+ - Other players info visible.
+ - Timer in game to make the game engaging.
