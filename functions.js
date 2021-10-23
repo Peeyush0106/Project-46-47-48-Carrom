@@ -2,7 +2,7 @@ function startQueenTxtTimer() {
     queenTxtTimerStart = true;
 }
 
-function continueQueenTimerUntilOverIfToDo() {
+function continueQueenTimerUntilOver() {
     if (queenTxtTimerStart && queenTxtTimer > 0) {
         queenTxtTimer -= 1;
     }
@@ -12,12 +12,6 @@ function continueQueenTimerUntilOverIfToDo() {
         queenTxtTimer = 3 * 30;
         queenTxtTimerStart = false;
     }
-}
-
-function gameWin() {
-    fill(rgb(0, 128, 0));
-    textSize(25);
-    text("You Win!", 250, 307);
 }
 
 function destroyCoins() {
@@ -49,6 +43,8 @@ function bounceObjects() {
     oppStriker.bounceOff(boardEdge);
     if (!strikerReady) {
         striker.bounce(coins);
+        striker.bounce(coins);
+        oppStriker.bounce(coins);
         oppStriker.bounce(coins);
     }
     for (let m = 0; m < coins.length; m++) {
@@ -94,9 +90,7 @@ function resetGame() {
     cancelUploads = true;
     database.ref("Playing/" + plrName).remove();
     playerCount -= 1;
-    database.ref("/").update({
-        playerCount: playerCount
-    });
+    updatePlrCount();
 }
 
 function drawShapesAndPatternsOnBoard() {
@@ -203,6 +197,9 @@ function alphaOnly(event) {
 function notify(_data, _color, _bgcolor, _timer) {
     unnotify();
     notification.html(_data);
+    if (_data !== undefined && _data.slice(0, 4) !== "Good") {
+        otherMsgShouldTakeOver = true;
+    }
     if (_color) {
         notification.style("color", _color);
     }
@@ -220,23 +217,35 @@ function notify(_data, _color, _bgcolor, _timer) {
 function unnotify() {
     notification.html("");
     notification.hide();
+    otherMsgShouldTakeOver = false;
 }
 
 function notifyCountDownContinue() {
     notificationTime -= 1;
 }
 
-function continueGame() {
+function guestContinue() {
     if (inputName.value() !== "") {
         inputName.hide();
         nameText.hide();
-        continueBtn.hide();
+        continueGuestBtn.hide();
+        plrName = inputName.value();
+        loggedInWithName = true;
+        startButtons[0].show();
         startButtons[1].show();
         loggedIn = true;
-        plrName = inputName.value()
+        cancelGoInGame.hide();
     }
     else {
-        notify("Please enter a valid name to continue..", "red", "blue");
+        notify("Please enter a valid name to continue..", "red", "blue", true);
+        alert("Please enter a valid name to continue..");
+    }
+}
+
+function continueGame() {
+    if (inputName.value() !== "") {
+        startButtons[1].show();
+        loggedIn = true;
     }
 }
 
@@ -270,15 +279,27 @@ async function updateMyShoot() {
 }
 
 async function getOppsShoot() {
+    await database.ref("Playing/" + otherPlrName + "/speed").get().then(function (data) {
+        if (data.exists()) {
+            otherPlrSpeed = data.val();
+        }
+    });
     await database.ref("Playing/" + otherPlrName + "/shooting").get().then(function (data) {
         if (data.exists()) {
             otherPlrShooting = data.val();
-            if (otherPlrShooting) oppStriker.setSpeedAndDirection(selectedSpeed);
+            if (otherPlrShooting) {
+                oppStriker.setSpeedAndDirection(otherPlrSpeed);
+                alert("shot");
+                database.ref("Playing/" + otherPlrName).update({
+                    shooting: false
+                });
+            }
         }
     }).catch(function (error) {
         console.error(error);
     });
 }
+
 
 async function updateStatus() {
     if (!cancelUploads && striker) {
@@ -300,8 +321,6 @@ async function updatePlrCount() {
     database.ref("/").update({
         playerCount: playerCount
     });
-    plrIndex = playerCount - 1;
-    console.log(plrIndex);
 }
 
 async function getPlayerData() {
@@ -310,15 +329,7 @@ async function getPlayerData() {
             var allData = data.val();
             allPlrData = allData.Playing;
             playerCount = allData.playerCount;
-            if (plrNames) {
-                otherPlrName = plrNames[otherPlrIndex];
-                if (plrName === otherPlrName && !cancelCommands) {
-                    console.log("Same name", plrName, otherPlrName);
-                    // alert("Sorry, but both players have selected the same name, please choose a different one...");
-                    cancelCommands = true;
-                    location.reload();
-                }
-            }
+            reservedNames = allData.reservedNames;
         }
     }).catch(function (error) {
         console.error(error);
@@ -341,27 +352,318 @@ function getOpponentsAngle() {
     opposAngle = plrAngles[otherPlrIndex];
 }
 
-function mousePressedOnStriker2() {
-    distanceBetweenStrikerAndMouse = dist(mouseX, mouseY, striker2.x, striker2.y)
-    if (mouseDown() && striker2.x <= 500 && striker2.x >= 100) {
-        return (distanceBetweenStrikerAndMouse < striker2.width && striker2.x <= 500 && striker2.x >= 100);
-    }
-}
-
-window.onbeforeunload = function () {
+window.onbeforeunload = function (e) {
+    e.preventDefault();
     cancelUploads = true;
     if (loggedIn) {
         database.ref("Playing/" + plrName).remove();
-        if (gameStarted || playerCount === 1) {
-            playerCount -= 1;
-            database.ref("/").update({
-                playerCount: playerCount
+        if (gameStarted || waitingForPlr) {
+            if (gameStarted) {
+                giveMeUp = true;
+            }
+            database.ref("playerCount").on("value", function (data) {
+                playerCount = data.val()
             });
+            database.ref("/").update({
+                playerCount: playerCount - 1
+            });
+            loseMe();
         }
+        database.ref("reservedNames/" + myReservedIndex).remove();
     }
 }
 
 function disablePlayBtn() {
     document.getElementById("play-btn").disabled = true;
     startButtons[1].style("background-color", "grey");
+}
+
+function enablePlayBtn() {
+    document.getElementById("play-btn").disabled = false;
+    startButtons[1].style("background-color", "blue");
+}
+
+function getOtherPlrName() {
+    for (var i in allPlrData) {
+        if (allPlrData[i].name != plrName) {
+            otherPlrName = allPlrData[i].name;
+        }
+    }
+}
+
+function checkConnection() {
+    /* auth.onAuthStateChanged(()={
+        **code**
+    })
+    We can even use the above code instead of the one below, but that doesn't fulfill ALL our conditions, so we'll use this one only ↓.
+    */
+    var connectedRef = firebase.database().ref(".info/connected");
+    connectedRef.on("value", function (snap) {
+        if (snap.val()) {
+            if (actIfConnected) {
+                console.log("connected");
+                connected = true;
+                actIfConnected = false;
+                // signupBtn.elt.disabled = false;
+                // signupBtn.elt.style["background-color"] = "green";
+                // signupBtn.elt.style.color = "white";
+                // loginBtn.elt.disabled = false;
+                // loginBtn.elt.style["background-color"] = "blue";
+                // loginBtn.elt.style.color = "white";
+                guestModeBtn.elt.disabled = false;
+                guestModeBtn.elt.style["background-color"] = "green";
+                guestModeBtn.elt.style.color = "white";
+            }
+            database.ref("/").get().then(function (data) {
+                if (data.exists()) {
+                    var allData = data.val();
+                    playerCount = allData.playerCount;
+                }
+            }).catch(function () {
+                if (confirm("Your network is not enough for the game. Please check your network speed and come back again.. Click 'Ok' to retry connecting once you are ready:(")) location.reload();
+            });
+        }
+        else {
+            showLoadingAnim();
+            actIfConnected = true;
+            if (!loggedIn) {
+                signupBtn.elt.disabled = true;
+                // signupBtn.elt.style["background-color"] = "gray";
+                // signupBtn.elt.style.color = "black";
+                loginBtn.elt.disabled = true;
+                // loginBtn.elt.style["background-color"] = "gray";
+                // loginBtn.elt.style.color = "black";
+                guestModeBtn.elt.disabled = true;
+                guestModeBtn.elt.style["background-color"] = "gray";
+                guestModeBtn.elt.style.color = "black";
+            }
+            if (waitingForPlr) {
+                alert("We are being forced to loose your changes because your internet connection seems to be unstable, please check your network quality, and try again...");
+                location.reload();
+                waitingForPlr = false;
+            }
+        }
+    });
+}
+
+function updateReservedNames() {
+    var _reserved_names = reservedNames;
+    database.ref("/").update({
+        reservedNames: _reserved_names
+    }).then(() => {
+        console.log(_reserved_names);
+        for (var i in _reserved_names) {
+            if (_reserved_names[i] === plrName) {
+                myReservedIndex = i;
+                console.log(_reserved_names[i], myReservedIndex);
+            }
+        }
+        console.log("Success!");
+    });
+}
+
+function loseMe() {
+    if (confirm("Are you sure you want to give up?")) database.ref("Playing/" + otherPlrName).update({
+        win: true
+    });
+}
+
+function loseMe() {
+    database.ref("Playing/" + plrName + "/win").get().then((data) => {
+        if (data.exisits()) {
+            // winning
+
+        }
+    });
+}
+
+function showWinMessage() {
+    stopAllSprites();
+    endGameBtn.show();
+    cancelGameMovement = true;
+    var maxCrownY = 160;
+    var maxCloudX1 = 250;
+    var maxCloudX2 = 280;
+    push();
+    // Message box
+    {
+        push();
+        rectMode(CENTER);
+        fill("black");
+        rect(250, 200, 250, 130);
+        pop();
+    }
+    // Show the encouragement text
+    // Show player tags
+    {
+        textSize(15);
+        fill("darkblue");
+        push();
+        stroke("white");
+        strokeWeight(1.5);
+        text("You", 130, 260);
+        text("Opponent", 280, 260);
+        pop();
+    }
+    // Define the values of formatting and show text
+    {
+        {
+            fill("lightgreen");
+            // To-do: remove below line on finalization
+            croppedPlrname = plrName.slice(0, 3);
+            if (plrName.length >= 3) {
+                crownX = 160;
+            }
+            if (plrName.length > 3) {
+                croppedPlrname = plrName.slice(0, 3) + "..";
+                textSize(50);
+            }
+            else {
+                textSize(70)
+            }
+            text(croppedPlrname, 125, 240);
+        }
+        {
+            fill("magenta");
+            // To-do: remove below line on finalization
+            croppedOtherPlrName = otherPlrName.slice(0, 3);
+            if (otherPlrName.length >= 3) {
+                cloudX = 160;
+            }
+            if (otherPlrName.length > 3) {
+                croppedOtherPlrName = otherPlrName.slice(0, 3) + "..";
+                textSize(22.5);
+            }
+            else {
+                textSize(42.5);
+            }
+            text(croppedOtherPlrName, 300, 240);
+        }
+    }
+    // Movement of the crown
+    {
+        push();
+        translate(crownX, crownY);
+        if (crownY < maxCrownY) {
+            crownY += 6;
+            crownRotation += 0.39;
+        }
+        rotate(crownRotation);
+        image(crown, 0, 0, (1329 / 10 / 2.2), (980 / 10 / 2.2));
+        pop();
+    }
+    // Movement of the cloud
+    {
+        if (cloudX1 < maxCloudX1) {
+            cloudX1 += 6;
+        }
+        if (cloudX2 > maxCloudX2) {
+            cloudX2 -= 5;
+        }
+        image(cloud, cloudX1, cloudY, (5277 / 80), (3745 / 80));
+        image(cloud, cloudX2, cloudY, (5277 / 80), (3745 / 80));
+    }
+    pop();
+    endTxt.show();
+}
+
+function showLoseMessage() {
+    stopAllSprites();
+    endGameBtn.show();
+    cancelGameMovement = true;
+    var maxCrownY = 160;
+    var maxCloudX1 = 125;
+    var maxCloudX2 = 165;
+    crownX = 320;
+    endTxt.html("You lose! No problem, try again <br> to beat your opponents and by practising more").style("font-size", "11px").position(130, 130);
+    push();
+    // Message box
+    {
+        push();
+        rectMode(CORNER);
+        fill("black");
+        rect(75, 200, 450, 330);
+        pop();
+    }
+    // Show the encouragement text
+    // Show player tags
+    {
+        textSize(15);
+        fill("darkblue");
+        push();
+        stroke("white");
+        strokeWeight(1.5);
+        text("You", 130, 260);
+        text("Opponent", 280, 260);
+        pop();
+    }
+    // Define the values of formatting and show text
+    {
+        {
+            plrName = "OOOO";
+            fill("lightgreen");
+            croppedPlrname = plrName.slice(0, 3);
+            if (plrName.length > 3) {
+                croppedPlrname = plrName.slice(0, 3) + "..";
+                textSize(22.5);
+            }
+            else {
+                textSize(42.5)
+            }
+            text(croppedPlrname, 135, 240);
+        }
+        {
+            otherPlrName = "PPPP";
+            fill("magenta");
+            croppedOtherPlrName = otherPlrName.slice(0, 3);
+            if (otherPlrName.length >= 3) {
+                cloudX = 160;
+            }
+            if (otherPlrName.length > 3) {
+                croppedOtherPlrName = otherPlrName.slice(0, 3) + "..";
+                textSize(50);
+            }
+            else {
+                textSize(70);
+            }
+            text(croppedOtherPlrName, 280, 240);
+        }
+    }
+    // Movement of the crown
+    {
+        push();
+        translate(crownX, crownY);
+        if (crownY < maxCrownY) {
+            crownY += 6;
+            crownRotation += 0.41;
+        }
+        rotate(crownRotation);
+        image(crown, 0, 0, (1329 / 10 / 2.2), (980 / 10 / 2.2));
+        pop();
+    }
+    // Movement of the cloud
+    {
+        if (cloudX1 < maxCloudX1) {
+            cloudX1 += 6;
+        }
+        if (cloudX2 > maxCloudX2) {
+            cloudX2 -= 5;
+        }
+        image(cloud, cloudX1, cloudY, (5277 / 80), (3745 / 80));
+        image(cloud, cloudX2, cloudY, (5277 / 80), (3745 / 80));
+    }
+    pop();
+    endTxt.show();
+    if (!showedOhhYouLostAlert) {
+        alertSnd.play();
+        alert("Ohhh..  you lost, you might have lost because the other other player would have scored more points, or you have given up. Don't worry, practice more and get better in aiming at the coins.");
+        showedOhhYouLostAlert = true;
+    }
+}
+
+function stopAllSprites() {
+    for (var i in allSprites) {
+        allSprites[i].velocityX = 0;
+        allSprites[i].velocityY = 0;
+    }
 }

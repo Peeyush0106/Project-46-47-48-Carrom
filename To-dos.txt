@@ -1,0 +1,12 @@
+ 
+ --> Main <--
+ - - Chance switching
+ - - Other player score
+ - - Lose and Win Boxes
+ - - Do not start game before other player active
+
+ - --> Issues <--
+ - - Opponent Striker Movement not proper
+ - - Striker angle not accurate
+ - - Queen text blinks for once and doesn't show up again if the queen goes into the pockets and the striker makes a double due.
+ 
