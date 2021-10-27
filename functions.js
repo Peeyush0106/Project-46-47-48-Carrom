@@ -65,7 +65,7 @@ function resetGame() {
     startButtons[3].hide();
     gameState = 0;
     striker.destroy();
-    striker2.destroy();
+    //striker2.destroy();
     coins.destroyEach();
     boardEdge.destroy();
     thickBand.destroy();
@@ -278,27 +278,7 @@ async function updateMyShoot() {
     });
 }
 
-async function getOppsShoot() {
-    await database.ref("Playing/" + otherPlrName + "/speed").get().then(function (data) {
-        if (data.exists()) {
-            otherPlrSpeed = data.val();
-        }
-    });
-    await database.ref("Playing/" + otherPlrName + "/shooting").get().then(function (data) {
-        if (data.exists()) {
-            otherPlrShooting = data.val();
-            if (otherPlrShooting) {
-                oppStriker.setSpeedAndDirection(otherPlrSpeed);
-                alert("shot");
-                database.ref("Playing/" + otherPlrName).update({
-                    shooting: false
-                });
-            }
-        }
-    }).catch(function (error) {
-        console.error(error);
-    });
-}
+
 
 
 async function updateStatus() {
@@ -336,21 +316,46 @@ async function getPlayerData() {
     });
 }
 
-function getOpponentsAngle() {
-    plrAngles = [];
-    plrNames = [];
-    for (var i in allPlrData) {
-        plrAngles.push(allPlrData[i].angle);
-        plrNames.push(allPlrData[i].name);
-    }
-    if (plrIndex === 0) {
-        otherPlrIndex = 1;
-    }
-    if (plrIndex === 1) {
-        otherPlrIndex = 0;
-    }
-    opposAngle = plrAngles[otherPlrIndex];
-}
+// function getOpponentsAngle() {
+//     plrAngles = [];
+//     plrNames = [];
+//     for (var i in allPlrData) {
+//         plrAngles.push(allPlrData[i].angle);
+//         plrNames.push(allPlrData[i].name);
+//     }
+//     if (plrIndex === 0) {
+//         otherPlrIndex = 1;
+//     }
+//     if (plrIndex === 1) {
+//         otherPlrIndex = 0;
+//     }
+//     opposAngle = plrAngles[otherPlrIndex];
+//     otherPlrSpeed = allPlrData[otherPlrName].speed;
+//     otherPlrShooting = allPlrData[otherPlrName].shooting;
+
+//     if (otherPlrShooting) {
+//         oppStriker.setSpeedAndDirection(otherPlrSpeed);
+//         database.ref("Playing/" + otherPlrName).update({
+//             shooting: false
+//         });
+//     }
+// }
+
+// async function getOppsShoot() {
+//     await database.ref("Playing/" + otherPlrName + "/shooting").get().then(function (data) {
+//         if (data.exists()) {
+//             if (otherPlrShooting) {
+//                 oppStriker.setSpeedAndDirection(otherPlrSpeed);
+//                 alert("shot");
+//                 database.ref("Playing/" + otherPlrName).update({
+//                     shooting: false
+//                 });
+//             }
+//         }
+//     }).catch(function (error) {
+//         console.error(error);
+//     });
+// }
 
 window.onbeforeunload = function (e) {
     e.preventDefault();
@@ -451,14 +456,14 @@ function updateReservedNames() {
     database.ref("/").update({
         reservedNames: _reserved_names
     }).then(() => {
-        console.log(_reserved_names);
+       // console.log(_reserved_names);
         for (var i in _reserved_names) {
             if (_reserved_names[i] === plrName) {
                 myReservedIndex = i;
-                console.log(_reserved_names[i], myReservedIndex);
+                //console.log(_reserved_names[i], myReservedIndex);
             }
         }
-        console.log("Success!");
+        //console.log("Success!");
     });
 }
 

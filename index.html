@@ -2,48 +2,50 @@
 <html lang="en">
 
 <head>
-  <title>Carrom</title>
-  <script src="libraries/p5.js"></script>
-  <script src="libraries/p5.dom.min.js"></script>
-  <script src="libraries/p5.sound.min.js"></script>
-  <script src="libraries/p5.play.js"></script>
-  <meta charset="utf-8">
+	<title>Carrom</title>
+	<script src="libraries/p5.js"></script>
+	<script src="libraries/p5.dom.min.js"></script>
+	<script src="libraries/p5.sound.min.js"></script>
+	<script src="libraries/p5.play.js"></script>
+	<meta charset="utf-8">
 
 </head>
 
 <body style="zoom: 90%;">
-  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
-  <script>
-    // Your web app's Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyD-2IMOiMV5Fm30CEA5ADPtOm5MAboLwTE",
-      authDomain: "carrom-game---3.firebaseapp.com",
-      projectId: "carrom-game---3",
-      storageBucket: "carrom-game---3.appspot.com",
-      messagingSenderId: "32650886987",
-      appId: "1:32650886987:web:91d36e3d40edbd720832ce",
-      measurementId: "G-5R2T5WN3C5"
-    };
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-  </script>
+	<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+	<script>
+		// Your web app's Firebase configuration
+		const firebaseConfig = {
+			apiKey: "AIzaSyD-2IMOiMV5Fm30CEA5ADPtOm5MAboLwTE",
+			authDomain: "carrom-game---3.firebaseapp.com",
+			projectId: "carrom-game---3",
+			storageBucket: "carrom-game---3.appspot.com",
+			messagingSenderId: "32650886987",
+			appId: "1:32650886987:web:91d36e3d40edbd720832ce",
+			measurementId: "G-5R2T5WN3C5"
+		};
+		// Initialize Firebase
+		firebase.initializeApp(firebaseConfig);
+	</script>
 
-  <div id="guestOpts" hidden="true">
+	<div id="guestOpts" hidden="true">
 
-  </div>
+	</div>
 
-  <link rel="stylesheet" type="text/css" href="style.css">
-  <p id="mouse-pos" style="font-size: medium;"></p>
-  <script src="loading.js"></script>
-  <script src="setup.js"></script>
-  <script src="functions.js"></script>
-  <script src="game.js"></script>
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<p id="mouse-pos" style="font-size: medium;"></p>
+	<script src="loading.js"></script>
+	<script src="setup.js"></script>
+	<script src="functions.js"></script>
+	<script src="game.js"></script>
 
-  <button class="arrow-key" id="left" style="position: absolute; left: 370px; top: 730px;"
-    onmousedown="leftArrowPressed = true;" onmouseup="leftArrowPressed = false;" hidden="true">🠔</button>
+	<button class="arrow-key" id="left" style="position: absolute; left: 370px; top: 730px;"
+		onmousedown="leftArrowPressed = true;" onmouseup="leftArrowPressed = false;" hidden="true">🠔</button>
 
-  <button class="arrow-key" id="right" style="position: absolute; left: 450px; top: 730px;"
-    onmousedown="rightArrowPressed = true;" onmouseup="rightArrowPressed = false;" hidden="true">🠖</button>
-</body>
+	<button class="arrow-key" id="right" style="position: absolute; left: 450px; top: 730px;"
+		onmousedown="rightArrowPressed = true;" onmouseup="rightArrowPressed = false;" hidden="true">🠖</button>
+
+	</body>
+</html>

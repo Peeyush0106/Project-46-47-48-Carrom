@@ -1,8 +1,9 @@
 var mouse_pos = document.getElementById("mouse-pos");
 var coinDiameter = 25;
 
-var plrName, plrNameAlreadyTaken, nameText, pwdText, playersEntered, playerCount, playCliked, cancelUploads, playerData, login, loginAndPlay, loggedIn, gameStarted, waitingTxt, nameChecked, checkedAnEnterStatement, notification, notificationTime, notifyTimeStarted, saluteMsg, periodOfDay, addedMeInGame, shownDisableMsg, shownReadyMessage, waitingForPlr, cancelCommands, firstTurnDecisionDone, IamFirst, loggedInWithName, pocket_width_and_height, pockets, thickStripWidth, coins_pos, canvas, boardEdge, selectedSpeed, thinStripWidth, coins, striker, striker2, strikerMove, ellipse_pos, haveToSetStriker, queen, music, edges, strip_pos, stopped_coins, thickBand, thinBand, whiteImg, blackImg, queenImg, strikerImg, strikerReady, pocket_pos, gameState, showOptions, points, queenInPocket, plrNames, strikerStateChecked, queenTxtTimer, queenTxt, turns, extraCoin, turnStarts, plrAngles, otherPlrIndex, opposAngle, pointsAfterQueenCaptured, strikerState, queenTxtTimerStart, recentQueenCapturedTurnNo, waitForQueenCover, shootBtn, speedSlider, playerCount, plrIndex, otherPlrName, oppStriker, playClicked, loggedInPlrs, strikerShoot, otherPlrShooting, otherPlrSpeed, giveMeUp, otherMsgShouldTakeOver, auth, showingDetails, isPreviousLogin, connected, actIfConnected, signupBtn, loginBtn, guestModeBtn, inputName2, continueSignupBtn, inputEmail, inputPwd, prev_data, continueLoginBtn, inputName, nameText, continueGuestBtn, cancelGoInGame, inGamingMode, nameOverlapped, reservedNames, myReservedIndex, leftArrowPressed, rightArrowPressed, crown,
-    cloud, showedOhhYouLostAlert, endTxt, otherPlrExists, alertForOtherPlrNotLiveShown;
+var plrName, plrNameAlreadyTaken, nameText, pwdText, playersEntered, playerCount, playCliked, cancelUploads, playerData, login, loginAndPlay, loggedIn, gameStarted, waitingTxt, nameChecked, checkedAnEnterStatement, notification, notificationTime, notifyTimeStarted, saluteMsg, periodOfDay, addedMeInGame, shownDisableMsg, shownReadyMessage, waitingForPlr, cancelCommands, firstTurnDecisionDone, IamFirst, loggedInWithName, pocket_width_and_height, pockets, thickStripWidth, coins_pos, canvas, boardEdge, selectedSpeed, thinStripWidth, coins, striker, striker2, strikerMove, ellipse_pos, queen, music, edges, strip_pos, stopped_coins, thickBand, thinBand, whiteImg, blackImg, queenImg, strikerImg, strikerReady, pocket_pos, gameState, showOptions, points, queenInPocket, plrNames, strikerStateChecked, queenTxtTimer, queenTxt, turns, extraCoin, turnStarts, plrAngles, otherPlrIndex, opposAngle, pointsAfterQueenCaptured, strikerState, queenTxtTimerStart, recentQueenCapturedTurnNo, waitForQueenCover, shootBtn, speedSlider, playerCount, plrIndex, otherPlrName, oppStriker, playClicked, loggedInPlrs, strikerShoot, otherPlrShooting, otherPlrSpeed, giveMeUp, otherMsgShouldTakeOver, auth, showingDetails, isPreviousLogin, connected, actIfConnected, signupBtn, loginBtn, guestModeBtn, inputName2, continueSignupBtn, inputEmail, inputPwd, prev_data, continueLoginBtn, inputName, nameText, continueGuestBtn, cancelGoInGame, inGamingMode, nameOverlapped, reservedNames, myReservedIndex, leftArrowPressed, rightArrowPressed, crown, cloud, showedOhhYouLostAlert, endTxt, otherPlrExists, alertForOtherPlrNotLiveShown;
+
+var myTurn;
 
 function preload() {
     // images
@@ -298,7 +299,8 @@ function preload() {
                     }
 
                     if (existingNameFound) {
-                        alert("That name is already chosen by another player, please choose another one. You can rather Sign Up to save your scores and achievements.");
+                        // alert("That name is already chosen by another player, please choose another one. You can rather Sign Up to save your scores and achievements.");
+                        alert("That name is already chosen by another player, please choose another one.");
                     }
                     else {
                         plrName = inputName.value();
@@ -327,8 +329,9 @@ function preload() {
 {
     function setStriker() {
         turnStarts += 1;
-        if (striker2 !== undefined) striker.x = striker2.x;
-        else striker.x = 300;
+        // if (striker2 !== undefined) striker.x = striker2.x;
+        // else striker.x = 300;
+        striker.x = 300;
         striker.y = 530;
         strikerReady = false;
         striker.setSpeedAndDirection(0)
@@ -384,10 +387,10 @@ function preload() {
         striker.restitution = 0.08;
         striker.setCollider("circle");
         striker.addImage(strikerImg);
-        striker2 = createSprite(300, 650);
-        striker2.rotation = -90;
-        striker2.depth = 1;
-        striker2.addImage(strikerImg);
+        // striker2 = createSprite(300, 650);
+        // striker2.rotation = -90;
+        // striker2.depth = 1;
+        // striker2.addImage(strikerImg);
 
         oppStriker = createSprite(300, 65);
         oppStriker.rotation = 90;

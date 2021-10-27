@@ -6,13 +6,15 @@ function draw() {
     gameControls();
     loginStatus();
 
-    if (frameCount % 20 === 0) {
-        compareDatabaseData(prev_data)
-    }
+    // if (frameCount % 20 === 0) {
+    //     compareDatabaseData(prev_data)
+    // }
 
     if (playerCount === 2 && playClicked) {
         startPlaying();
         startGame();
+        setOtherPlayerInfo();
+        selectPlayerForShot();
         checkedAnEnterStatement = true;
         oppStriker.x = 300;
         oppStriker.y = 65;
@@ -28,42 +30,37 @@ function draw() {
     }
 
     if (gameState === 0) queenTxt.hide();
-    if (gameState === 1) gameStart();
+    if (gameState === 1) gamePlay();
 
     continueQueenTimerUntilOver();
 }
 
 function gameControls() {
     if (leftArrowPressed) {
-        if (striker2.x === 500) striker2.x = 464;
-        if (striker2.x > 464) striker2.x = 500;
-        if (striker2.x > 100) striker2.x -= 4;
+        if (striker.x === 500) striker.x = 464;
+        if (striker.x > 464) striker.x = 500;
+        if (striker.x > 100) striker.x -= 4;
     }
 
     if (rightArrowPressed) {
-        if (striker2.x === 100) striker2.x = 136;
-        if (striker2.x < 136) striker2.x = 100;
-        if (striker2.x < 500) striker2.x += 4;
+        if (striker.x === 100) striker.x = 136;
+        if (striker.x < 136) striker.x = 100;
+        if (striker.x < 500) striker.x += 4;
     }
 
-    if (!checkedAnEnterStatement) {
-        if (!gameStarted && !loggedInWithName && keyDown("enter")) {
+    if (!checkedAnEnterStatement && !gameStarted && keyDown("enter")) {
+        if (!loggedInWithName) {
             guestContinue();
             checkedAnEnterStatement = true;
-        }
-    }
-    if (!checkedAnEnterStatement) {
-        if (!gameStarted && loggedInWithName && !loggedIn && keyDown("enter")) {
+        } else if (loggedInWithName && !loggedIn) {
             continueGame();
             checkedAnEnterStatement = true;
-        }
-    }
-    if (!checkedAnEnterStatement) {
-        if (!gameStarted && loggedIn && keyDown("enter")) {
+        } else if (loggedIn) {
             playClicked = true;
             playerCount += 1;
             updatePlrCount();
             plrIndex = playerCount - 1;
+            checkedAnEnterStatement = true;
         }
     }
     if (keyWentUp("enter")) {
@@ -179,34 +176,25 @@ function win() {
     pop();
 }
 
-function compareDatabaseData(dataToCompare) {
-    //console.log(dataToCompare);
-    database.ref("/").get().then(function (data) {
-        if (data.exists()) {
-            var dataReceived = data.val();
-            if (JSON.stringify(dataToCompare) !== JSON.stringify(dataReceived)) {
-                console.log(dataReceived);
-                // console.log(prev_data);
-                prev_data = data.val();
-            }
-            return data.val();
-        }
-    });
-}
-
-function checkifGameStatedAndOtherPlrDataNotAvail() {
+function checkifGameStartedAndOtherPlrDataNotAvail() {
     database.ref("/Playing").get().then(function (data) {
         if (data.exists()) {
             otherPlrNameCounted = false;
-            for (var i in data.val()) if (data.val()[i].name !== plrName) otherPlrNameCounted = true;
-            if (!otherPlrNameCounted) otherPlrExists = false;
+            for (var i in data.val()) {
+                if (data.val()[i].name !== plrName) {
+                    otherPlrNameCounted = true;
+                }
+            }
+            if (!otherPlrNameCounted) {
+                otherPlrExists = false;
+            }
         }
     });
 }
 
-function gameStart() {
-    getOpponentsAngle();
-    getOppsShoot();
+function gamePlay() {
+    //getOpponentsAngle();
+    //getOppsShoot();
     // checkifGameStatedAndOtherPlrDataNotAvail();
     // if (!otherPlrExists) {
     //     setTimeout(function () {
@@ -217,25 +205,16 @@ function gameStart() {
     //         }
     //     }, 1000);
     // }
-    if (allPlrData) {
-        getOtherPlrName();
+
+    if(isMyTurn()) {
+        striker.visible = true;
+        oppStriker.visible = false;
+    } else {
+        oppStriker.visible = true;
+        striker.visible = false;
     }
-    if (plrIndex === 0 && !firstTurnDecisionDone) {
-        var firstPlayerIndex = Math.round(Math.random());
-        if (firstPlayerIndex === 1) {
-            database.ref("Playing/" + otherPlrName).update({
-                isFirstPlayer: true
-            });
-        }
-        else {
-            database.ref("Playing/" + plrName).update({
-                isFirstPlayer: true
-            });
-            IamFirst = true;
-        }
-        console.log(firstPlayerIndex, "plays first");
-        firstTurnDecisionDone = true;
-    }
+
+
     if (opposAngle) {
         oppStriker.rotation = opposAngle + 180;
     }
@@ -251,35 +230,36 @@ function gameStart() {
     bounceObjects();
 
     if (strikerReady) {
-        striker.x = striker2.x;
-        striker2.pointTo(mouseX, mouseY);
+        //striker.x = striker2.x;
+        //striker.pointTo(mouseX, mouseY);
         if (mouseDown() && mouseY < 600) {
             striker.pointTo(mouseX, mouseY);
         }
         else {
-            if (striker2.x === 496 && keyDown("left")) striker2.x = 464;
-            if (striker2.x === 104 && keyDown("right")) striker2.x = 136;
+            if (striker.x === 496 && keyDown("left")) striker.x = 464;
+            if (striker.x === 104 && keyDown("right")) striker.x = 136;
 
             if (keyDown("a")) striker.rotation -= 4;
             if (keyDown("d")) striker.rotation += 4;
 
             if (keyDown("enter") && !(checkedAnEnterStatement && mouseDown())) shoot();
-            if (strikerState === "moving") striker2.x = mouseX;
+            if (strikerState === "moving") striker.x = mouseX;
 
-            if (striker2.x > 464 && !keyDown("left")) striker2.x = 500;
-            if (striker2.x < 136 && !keyDown("right")) striker2.x = 100;
+            if (striker.x > 464 && !keyDown("left")) striker.x = 500;
+            if (striker.x < 136 && !keyDown("right")) striker.x = 100;
 
-            if (striker2.x > 100 && keyDown("left")) striker2.x = striker2.x - 4;
-            if (striker2.x < 500 && keyDown("right")) striker2.x = striker2.x + 4;
+            if (striker.x > 100 && keyDown("left")) striker.x = striker.x - 4;
+            if (striker.x < 500 && keyDown("right")) striker.x = striker.x + 4;
         }
     }
-    if (!strikerReady) striker2.pointTo(striker.x, striker.y);
+    //if (!strikerReady) striker2.pointTo(striker.x, striker.y);
 
     if (Math.round(Math.abs(striker.velocity.x)) <= 0.65
         && Math.round(Math.abs(striker.velocity.y)) <= 0.65
         && striker.x !== 300
         && striker.y !== 530) {
         setStriker();
+        switchTurn();
     }
     if (striker.y === 530 && Math.round(Math.abs(striker.velocity.x)) <= 0.65 && Math.round(Math.abs(striker.velocity.y)) <= 0.65) {
         strikerReady = true;
@@ -294,10 +274,7 @@ function gameStart() {
     if (striker.isTouching(pockets)) {
         setStriker();
         striker.setVelocity(0, 0);
-    }
-
-    if (haveToSetStriker) {
-        setStrikerToInitPos();
+        switchTurn();
     }
 
     drawSprites();
@@ -340,4 +317,57 @@ function gameStart() {
             waitForQueenCover = false;
         }
     }
+}
+
+async function setOtherPlayerInfo() {
+    while (allPlrData === undefined) {
+        await new Promise(r => setTimeout(r, 100));
+    }
+    if (allPlrData && !otherPlrName) {
+        //set master info
+        otherPlrIndex = plrIndex === 0 ? 1 : 0;
+        for (const i in allPlrData) {
+            const plr = allPlrData[i];
+            if (parseInt(plr.index) === otherPlrIndex) {
+                otherPlrName = plr.name;                
+                break;
+            }
+        }
+    }
+}
+
+async function selectPlayerForShot() {
+    while (otherPlrName === undefined) {
+        await new Promise(r => setTimeout(r, 100));
+    }
+    if (plrIndex === 0) {        
+        var firstPlayerIndex = Math.round(Math.random());
+        if (firstPlayerIndex === 1) {
+            database.ref("Playing/" + otherPlrName).update({
+                chance: true
+            });
+            database.ref("Playing/" + plrName).update({
+                chance: false
+            });
+        }
+        else {
+            database.ref("Playing/" + plrName).update({
+                chance: true
+            });
+            database.ref("Playing/" + otherPlrName).update({
+                chance: false
+            });
+        }        
+    }
+}
+
+function isMyTurn() {
+    if(allPlrData && allPlrData[plrName]) {
+        myTurn = allPlrData[plrName].chance;
+        return myTurn;
+    }
+}
+
+function switchTurn() {
+
 }
