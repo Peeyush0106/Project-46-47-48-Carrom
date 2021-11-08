@@ -1,0 +1,2 @@
+ - My striker shoots even if it's not my chance.
+ - After chance over, the other player's striker should take position.

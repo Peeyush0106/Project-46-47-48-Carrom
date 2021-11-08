@@ -6,10 +6,6 @@ function draw() {
     gameControls();
     loginStatus();
 
-    // if (frameCount % 20 === 0) {
-    //     compareDatabaseData(prev_data)
-    // }
-
     if (playerCount === 2 && playClicked) {
         startPlaying();
         startGame();
@@ -36,6 +32,8 @@ function draw() {
 }
 
 function gameControls() {
+    inGameOptions();
+
     if (leftArrowPressed) {
         if (striker.x === 500) striker.x = 464;
         if (striker.x > 464) striker.x = 500;
@@ -48,8 +46,10 @@ function gameControls() {
         if (striker.x < 500) striker.x += 4;
     }
 
+    /* guestModeBtn: 
     if (!checkedAnEnterStatement && !gameStarted && keyDown("enter")) {
         if (!loggedInWithName) {
+            console.log("loggedInWithName");
             guestContinue();
             checkedAnEnterStatement = true;
         } else if (loggedInWithName && !loggedIn) {
@@ -63,6 +63,7 @@ function gameControls() {
             checkedAnEnterStatement = true;
         }
     }
+    */
     if (keyWentUp("enter")) {
         checkedAnEnterStatement = false;
     }
@@ -130,15 +131,17 @@ function loginStatus() {
         }
     }
     else {
-        if (startButtons[0].elt.style.display !== "none") {
+        if (startButtons[0].elt.style.display !== "none" && !signupBtn.elt.hidden) {
             push();
             rectMode(CORNER);
             fill("black");
             noStroke();
-            rect(137.5, 290, 310, 255);
+            // guestModeBtn - rect(137.5, 290, 310, 255);
+            rect(137.5, 290, 310, 155);
             fill("white");
             textSize(30);
-            text("Start Gaming Options", 150, 535);
+            // guestModeBtn - text("Start Gaming Options", 150, 535);
+            text("Start Gaming Options", 150, 435);
             pop();
         }
     }
@@ -193,7 +196,7 @@ function checkifGameStartedAndOtherPlrDataNotAvail() {
 }
 
 function gamePlay() {
-    //getOpponentsAngle();
+    getOpponentsShootingData();
     //getOppsShoot();
     // checkifGameStatedAndOtherPlrDataNotAvail();
     // if (!otherPlrExists) {
@@ -206,14 +209,23 @@ function gamePlay() {
     //     }, 1000);
     // }
 
-    if(isMyTurn()) {
-        striker.visible = true;
-        oppStriker.visible = false;
-    } else {
-        oppStriker.visible = true;
-        striker.visible = false;
-    }
+    startButtons[0].elt.style.display = "none";
+    startButtons[1].elt.style.display = "none";
+    signoutBtn.elt.style.display = "none";
 
+    striker.visible = isMyTurn();
+    oppStriker.visible = !isMyTurn();
+
+    if (isMyTurn() && showChancePopup) {
+        document.getElementById("chance-popup").hidden = false;
+        document.getElementById("your-turn-txt").innerHTML = "Your Turn <br> " + Math.ceil(popupTimer);
+        popupTimer -= 1 / 2 / 2 / 2 / 2;
+        if (Math.ceil(popupTimer) === 0) {
+            showChancePopup = false;
+            popupTimer = 3;
+            document.getElementById("chance-popup").hidden = true;
+        }
+    }
 
     if (opposAngle) {
         oppStriker.rotation = opposAngle + 180;
@@ -230,27 +242,23 @@ function gamePlay() {
     bounceObjects();
 
     if (strikerReady) {
-        //striker.x = striker2.x;
-        //striker.pointTo(mouseX, mouseY);
-        if (mouseDown() && mouseY < 600) {
-            striker.pointTo(mouseX, mouseY);
-        }
-        else {
-            if (striker.x === 496 && keyDown("left")) striker.x = 464;
-            if (striker.x === 104 && keyDown("right")) striker.x = 136;
+        if (striker.x === 496 && keyDown("left")) striker.x = 464;
+        if (striker.x === 104 && keyDown("right")) striker.x = 136;
 
-            if (keyDown("a")) striker.rotation -= 4;
-            if (keyDown("d")) striker.rotation += 4;
+        if (keyDown("a")) striker.rotation -= 4;
+        if (keyDown("d")) striker.rotation += 4;
 
-            if (keyDown("enter") && !(checkedAnEnterStatement && mouseDown())) shoot();
-            if (strikerState === "moving") striker.x = mouseX;
+        if (keyDown("up")) speedSlider.elt.value = speedSlider.value() + 1;
+        if (keyDown("down")) speedSlider.elt.value = speedSlider.value() - 1;
 
-            if (striker.x > 464 && !keyDown("left")) striker.x = 500;
-            if (striker.x < 136 && !keyDown("right")) striker.x = 100;
+        if (keyDown("enter") && !(checkedAnEnterStatement && mouseDown())) shoot();
+        if (strikerState === "moving") striker.x = mouseX;
 
-            if (striker.x > 100 && keyDown("left")) striker.x = striker.x - 4;
-            if (striker.x < 500 && keyDown("right")) striker.x = striker.x + 4;
-        }
+        if (striker.x > 464 && !keyDown("left")) striker.x = 500;
+        if (striker.x < 136 && !keyDown("right")) striker.x = 100;
+
+        if (striker.x > 100 && keyDown("left")) striker.x = striker.x - 4;
+        if (striker.x < 500 && keyDown("right")) striker.x = striker.x + 4;
     }
     //if (!strikerReady) striker2.pointTo(striker.x, striker.y);
 
@@ -259,6 +267,9 @@ function gamePlay() {
         && striker.x !== 300
         && striker.y !== 530) {
         setStriker();
+        database.ref("Playing/" + plrName).update({
+            chance: false
+        });
         switchTurn();
     }
     if (striker.y === 530 && Math.round(Math.abs(striker.velocity.x)) <= 0.65 && Math.round(Math.abs(striker.velocity.y)) <= 0.65) {
@@ -273,13 +284,16 @@ function gamePlay() {
     // Reset striker
     if (striker.isTouching(pockets)) {
         setStriker();
+        database.ref("Playing/" + plrName).update({
+            chance: false
+        });
         striker.setVelocity(0, 0);
         switchTurn();
     }
 
     drawSprites();
 
-    if (gameState === 1) {
+    if (gameState === 1 && signupBtn.elt.style.display !== "none") {
         push();
         noFill();
         stroke("black");
@@ -329,7 +343,7 @@ async function setOtherPlayerInfo() {
         for (const i in allPlrData) {
             const plr = allPlrData[i];
             if (parseInt(plr.index) === otherPlrIndex) {
-                otherPlrName = plr.name;                
+                otherPlrName = plr.name;
                 break;
             }
         }
@@ -337,32 +351,33 @@ async function setOtherPlayerInfo() {
 }
 
 async function selectPlayerForShot() {
-    while (otherPlrName === undefined) {
-        await new Promise(r => setTimeout(r, 100));
-    }
-    if (plrIndex === 0) {        
+    if (plrIndex === 0) {
+        while (otherPlrName === undefined) {
+            await new Promise(r => setTimeout(r, 100));
+        }
         var firstPlayerIndex = Math.round(Math.random());
+        var firstPlrName, secondPlrName;
         if (firstPlayerIndex === 1) {
-            database.ref("Playing/" + otherPlrName).update({
-                chance: true
-            });
-            database.ref("Playing/" + plrName).update({
-                chance: false
-            });
+            firstPlrName = otherPlrName;
+            secondPlrName = plrName;
         }
         else {
-            database.ref("Playing/" + plrName).update({
-                chance: true
-            });
-            database.ref("Playing/" + otherPlrName).update({
-                chance: false
-            });
-        }        
+            firstPlrName = plrName;
+            secondPlrName = otherPlrName;
+            showChancePopup = true;
+        }
+
+        database.ref("Playing/" + firstPlrName).update({
+            chance: true
+        });
+        database.ref("Playing/" + secondPlrName).update({
+            chance: false
+        });
     }
 }
 
 function isMyTurn() {
-    if(allPlrData && allPlrData[plrName]) {
+    if (allPlrData && allPlrData[plrName]) {
         myTurn = allPlrData[plrName].chance;
         return myTurn;
     }

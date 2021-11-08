@@ -41,17 +41,17 @@ function bounceObjects() {
     striker.bounceOff(boardEdge);
     oppStriker.bounceOff(edges);
     oppStriker.bounceOff(boardEdge);
+    oppStriker.bounce(coins);
+    oppStriker.bounce(coins);
     if (!strikerReady) {
         striker.bounce(coins);
         striker.bounce(coins);
-        oppStriker.bounce(coins);
-        oppStriker.bounce(coins);
     }
     for (let m = 0; m < coins.length; m++) {
         const spr = coins[m];
         coins.bounceOff(spr);
     }
-    coins.bounceOff(edges)
+    coins.bounceOff(edges);
 }
 
 function resetGame() {
@@ -225,6 +225,7 @@ function notifyCountDownContinue() {
 }
 
 function guestContinue() {
+    console.log("guest");
     if (inputName.value() !== "") {
         inputName.hide();
         nameText.hide();
@@ -243,7 +244,7 @@ function guestContinue() {
 }
 
 function continueGame() {
-    if (inputName.value() !== "") {
+    if (inputName && inputName.value() !== "") {
         startButtons[1].show();
         loggedIn = true;
     }
@@ -277,9 +278,6 @@ async function updateMyShoot() {
         shooting: strikerShoot
     });
 }
-
-
-
 
 async function updateStatus() {
     if (!cancelUploads && striker) {
@@ -316,30 +314,26 @@ async function getPlayerData() {
     });
 }
 
-// function getOpponentsAngle() {
-//     plrAngles = [];
-//     plrNames = [];
-//     for (var i in allPlrData) {
-//         plrAngles.push(allPlrData[i].angle);
-//         plrNames.push(allPlrData[i].name);
-//     }
-//     if (plrIndex === 0) {
-//         otherPlrIndex = 1;
-//     }
-//     if (plrIndex === 1) {
-//         otherPlrIndex = 0;
-//     }
-//     opposAngle = plrAngles[otherPlrIndex];
-//     otherPlrSpeed = allPlrData[otherPlrName].speed;
-//     otherPlrShooting = allPlrData[otherPlrName].shooting;
+function getOpponentsShootingData() {
+    if (allPlrData && otherPlrName) {
+        otherPlrShooting = allPlrData[otherPlrName].shooting;
+        if (!otherPlrShooting) {
+            opposAngle = allPlrData[otherPlrName].angle;
+            otherPlrSpeed = allPlrData[otherPlrName].speed;
 
-//     if (otherPlrShooting) {
-//         oppStriker.setSpeedAndDirection(otherPlrSpeed);
-//         database.ref("Playing/" + otherPlrName).update({
-//             shooting: false
-//         });
-//     }
-// }
+            if (otherPlrShooting) {
+                oppStriker.setSpeedAndDirection(otherPlrSpeed);
+                database.ref("Playing/" + otherPlrName).update({
+                    shooting: false
+                });
+            }
+            if (!allPlrData[otherPlrName].chance) {
+                oppStriker.x = 300;
+                oppStriker.y = 65;
+            }
+        }
+    }
+}
 
 // async function getOppsShoot() {
 //     await database.ref("Playing/" + otherPlrName + "/shooting").get().then(function (data) {
@@ -357,8 +351,7 @@ async function getPlayerData() {
 //     });
 // }
 
-window.onbeforeunload = function (e) {
-    e.preventDefault();
+window.onbeforeunload = function () {
     cancelUploads = true;
     if (loggedIn) {
         database.ref("Playing/" + plrName).remove();
@@ -405,42 +398,44 @@ function checkConnection() {
     var connectedRef = firebase.database().ref(".info/connected");
     connectedRef.on("value", function (snap) {
         if (snap.val()) {
-            if (actIfConnected) {
+            if (actIfConnected && !auth.currentUser && !gameStarted) {
                 console.log("connected");
                 connected = true;
                 actIfConnected = false;
-                // signupBtn.elt.disabled = false;
-                // signupBtn.elt.style["background-color"] = "green";
-                // signupBtn.elt.style.color = "white";
-                // loginBtn.elt.disabled = false;
-                // loginBtn.elt.style["background-color"] = "blue";
-                // loginBtn.elt.style.color = "white";
-                guestModeBtn.elt.disabled = false;
-                guestModeBtn.elt.style["background-color"] = "green";
-                guestModeBtn.elt.style.color = "white";
+                signupBtn.elt.hidden = false;
+                loginBtn.elt.hidden = false;
+                startButtons[0].elt.style.display = "block";
+                // guestModeBtn.elt.hidden = false;
+            }
+            else if (auth.currentUser && showSignedInOpts) {
+                database.ref("Users/" + auth.currentUser.uid).get().then((data) => {
+                    plrName = data.val().name;
+                })
+                startButtons[0].show();
+                startButtons[1].show();
+                loggedIn = true;
+                cancelGoInGame.hide();
             }
             database.ref("/").get().then(function (data) {
-                if (data.exists()) {
+                if (data.exists() && auth.currentUser) {
                     var allData = data.val();
                     playerCount = allData.playerCount;
                 }
             }).catch(function () {
-                if (confirm("Your network is not enough for the game. Please check your network speed and come back again.. Click 'Ok' to retry connecting once you are ready:(")) location.reload();
+                if (!networkAlertShown && auth.currentUser && !justSignedUp) {
+                    alert("Your network is not enough for the game. Please check your network speed and come back again :(");
+                    networkAlertShown = true;
+                }
             });
         }
         else {
             showLoadingAnim();
             actIfConnected = true;
             if (!loggedIn) {
-                signupBtn.elt.disabled = true;
-                // signupBtn.elt.style["background-color"] = "gray";
-                // signupBtn.elt.style.color = "black";
-                loginBtn.elt.disabled = true;
-                // loginBtn.elt.style["background-color"] = "gray";
-                // loginBtn.elt.style.color = "black";
-                guestModeBtn.elt.disabled = true;
-                guestModeBtn.elt.style["background-color"] = "gray";
-                guestModeBtn.elt.style.color = "black";
+                signupBtn.elt.hidden = true;
+                loginBtn.elt.hidden = true;
+                startButtons[0].elt.style.display = "none";
+                // guestModeBtn.elt.hidden = true;
             }
             if (waitingForPlr) {
                 alert("We are being forced to loose your changes because your internet connection seems to be unstable, please check your network quality, and try again...");
@@ -456,7 +451,7 @@ function updateReservedNames() {
     database.ref("/").update({
         reservedNames: _reserved_names
     }).then(() => {
-       // console.log(_reserved_names);
+        // console.log(_reserved_names);
         for (var i in _reserved_names) {
             if (_reserved_names[i] === plrName) {
                 myReservedIndex = i;

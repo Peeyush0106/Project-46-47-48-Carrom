@@ -1,7 +1,7 @@
 var mouse_pos = document.getElementById("mouse-pos");
 var coinDiameter = 25;
 
-var plrName, plrNameAlreadyTaken, nameText, pwdText, playersEntered, playerCount, playCliked, cancelUploads, playerData, login, loginAndPlay, loggedIn, gameStarted, waitingTxt, nameChecked, checkedAnEnterStatement, notification, notificationTime, notifyTimeStarted, saluteMsg, periodOfDay, addedMeInGame, shownDisableMsg, shownReadyMessage, waitingForPlr, cancelCommands, firstTurnDecisionDone, IamFirst, loggedInWithName, pocket_width_and_height, pockets, thickStripWidth, coins_pos, canvas, boardEdge, selectedSpeed, thinStripWidth, coins, striker, striker2, strikerMove, ellipse_pos, queen, music, edges, strip_pos, stopped_coins, thickBand, thinBand, whiteImg, blackImg, queenImg, strikerImg, strikerReady, pocket_pos, gameState, showOptions, points, queenInPocket, plrNames, strikerStateChecked, queenTxtTimer, queenTxt, turns, extraCoin, turnStarts, plrAngles, otherPlrIndex, opposAngle, pointsAfterQueenCaptured, strikerState, queenTxtTimerStart, recentQueenCapturedTurnNo, waitForQueenCover, shootBtn, speedSlider, playerCount, plrIndex, otherPlrName, oppStriker, playClicked, loggedInPlrs, strikerShoot, otherPlrShooting, otherPlrSpeed, giveMeUp, otherMsgShouldTakeOver, auth, showingDetails, isPreviousLogin, connected, actIfConnected, signupBtn, loginBtn, guestModeBtn, inputName2, continueSignupBtn, inputEmail, inputPwd, prev_data, continueLoginBtn, inputName, nameText, continueGuestBtn, cancelGoInGame, inGamingMode, nameOverlapped, reservedNames, myReservedIndex, leftArrowPressed, rightArrowPressed, crown, cloud, showedOhhYouLostAlert, endTxt, otherPlrExists, alertForOtherPlrNotLiveShown;
+var plrName, plrNameAlreadyTaken, nameText, pwdText, playersEntered, playerCount, playCliked, cancelUploads, playerData, login, loginAndPlay, loggedIn, gameStarted, waitingTxt, nameChecked, doNotShowSignedInOpts, checkedAnEnterStatement, notification, notificationTime, notifyTimeStarted, saluteMsg, periodOfDay, addedMeInGame, shownDisableMsg, shownReadyMessage, waitingForPlr, cancelCommands, firstTurnDecisionDone, IamFirst, loggedInWithName, pocket_width_and_height, pockets, thickStripWidth, coins_pos, canvas, boardEdge, selectedSpeed, thinStripWidth, coins, striker, striker2, strikerMove, ellipse_pos, queen, music, edges, strip_pos, stopped_coins, thickBand, thinBand, whiteImg, blackImg, queenImg, strikerImg, strikerReady, pocket_pos, gameState, showOptions, points, queenInPocket, plrNames, strikerStateChecked, queenTxtTimer, queenTxt, turns, extraCoin, turnStarts, plrAngles, otherPlrIndex, opposAngle, pointsAfterQueenCaptured, strikerState, queenTxtTimerStart, recentQueenCapturedTurnNo, waitForQueenCover, shootBtn, speedSlider, playerCount, plrIndex, otherPlrName, oppStriker, playClicked, loggedInPlrs, strikerShoot, otherPlrShooting, otherPlrSpeed, giveMeUp, otherMsgShouldTakeOver, auth, showingDetails, isPreviousLogin, connected, actIfConnected, signupBtn, loginBtn, guestModeBtn, inputName2, continueSignupBtn, inputEmail, inputPwd, prev_data, continueLoginBtn, inputName, nameText, continueGuestBtn, cancelGoInGame, inGamingMode, nameOverlapped, reservedNames, myReservedIndex, leftArrowPressed, rightArrowPressed, crown, cloud, showChancePopup, showedOhhYouLostAlert, endTxt, otherPlrExists, alertForOtherPlrNotLiveShown, popupTimer, networkAlertShown, justSignedUp;
 
 var myTurn;
 
@@ -48,7 +48,12 @@ function preload() {
         reservedNames = [];
         nameOverlapped = false;
         showedOhhYouLostAlert = false;
+        justSignedUp = false;
         alertForOtherPlrNotLiveShown = false;
+        popupTimer = 3;
+        showChancePopup = false;
+        networkAlertShown = false;
+        showSignedInOpts = true;
         myReservedIndex = "no-index";
         showOptions = {
             currentOpt: 0,
@@ -107,7 +112,7 @@ function preload() {
                 doc_link3.show();
                 signupBtn.hide();
                 loginBtn.hide();
-                guestModeBtn.hide();
+                // guestModeBtn.hide();
                 document.getElementById("guestOpts").hidden = true;
                 showingDetails = true;
             }),
@@ -131,7 +136,7 @@ function preload() {
                     startButtons[2].hide();
                     signupBtn.show();
                     loginBtn.show();
-                    guestModeBtn.show();
+                    // guestModeBtn.show();
                 }
                 else {
                     startButtons[0].show();
@@ -160,29 +165,30 @@ function preload() {
                 showOptions.hideButtons();
             }).hide())
         ];
-        signupBtn = createButton("Sign Up - unsupported").attribute("class", "button").position(150, 310).style("background-color", "yellow").style("color", "red").style("width", "146.5px").style("font-size", "20px").mousePressed(() => {
+        signupBtn = createButton("Sign Up").attribute("class", "button").position(150, 310).style("background-color", "green").style("color", "white").style("width", "146.5px").style("font-size", "30px").mousePressed(() => {
             startButtons[0].hide();
             signupBtn.hide();
             loginBtn.hide();
-            guestModeBtn.hide();
+            // guestModeBtn.hide();
             createGoInAccountOpts(true, false);
         });
-        loginBtn = createButton("Log In - unsupported").attribute("class", "button").position(303.5, 310).style("background-color", "yellow").style("color", "red").style("width", "146.5px").style("font-size", "20px").mousePressed(() => {
-            startButtons[0].hide();
-            signupBtn.hide();
-            loginBtn.hide();
-            guestModeBtn.hide();
-            createGoInAccountOpts(false, true);
-        });
-        guestModeBtn = createButton("Play as Guest").attribute("class", "button").position(150, 415).mousePressed(() => {
-            guestMode = true;
-            document.getElementById("guestOpts").hidden = false;
-            createGuestOptions();
-            guestModeBtn.hide();
-            signupBtn.hide();
-            loginBtn.hide();
-            startButtons[0].hide();
-        });
+        loginBtn = createButton("Log In").attribute("class", "button").position(303.5, 310).style("background-color", "blue").style("color", "white").style("width", "146.5px").style
+            ("font-size", "30px").mousePressed(() => {
+                startButtons[0].hide();
+                signupBtn.hide();
+                loginBtn.hide();
+                // guestModeBtn.hide();
+                createGoInAccountOpts(false, true);
+            });
+        // guestModeBtn = createButton("Play as Guest").attribute("class", "button").position(150, 415).style("background-color", "green").style("color", "white").mousePressed(() => {
+        //     guestMode = true;
+        //     document.getElementById("guestOpts").hidden = false;
+        //     createGuestOptions();
+        //     guestModeBtn.hide();
+        //     signupBtn.hide();
+        //     loginBtn.hide();
+        //     startButtons[0].hide();
+        // });
 
         cancelPlayRequest = createButton("Cancel Play Request").attribute("class", "small-btn").position(285, 82.5).hide().style("color", "white").style("background-color", "green").style("font-size", "20px").mousePressed(() => {
             cancelPlayRequest.hide();
@@ -196,13 +202,15 @@ function preload() {
         });
 
         cancelGoInGame = createButton("Cancel").attribute("class", "button").style("width", "200px").style("height", "50px").style("color", "white").style("background-color", "red").position(302.5, 500).mousePressed(() => {
-            showElements(startButtons[0], signupBtn, loginBtn, guestModeBtn);
+            showElements(startButtons[0], signupBtn, loginBtn/*, guestModeBtn*/);
             hideElements(inputName2, continueSignupBtn, inputEmail, inputPwd, continueLoginBtn, inputName, nameText, continueGuestBtn, cancelGoInGame);
         }).hide();
 
         signoutBtn = createButton("Log Out").attribute("class", "button").style("width", "200px").style("height", "50px").style("color", "white").style("background-color", "red").position(202.5, 600).mousePressed(() => {
             if (auth.currentUser) {
-                auth.signOut();
+                auth.signOut().then(() => {
+                    location.reload();
+                });
             }
             else {
                 location.reload();
@@ -235,12 +243,17 @@ function preload() {
                 if (inputName2.value() !== "" &&
                     inputEmail.value() !== "" &&
                     inputPwd.value() !== "") {
+                    justSignedUp = true;
                     auth.createUserWithEmailAndPassword(inputEmail.value(), inputPwd.value()).then(() => {
                         database.ref("Users/" + auth.currentUser.uid).update({
                             email: inputEmail.value(),
                             name: inputName2.value(),
                             id: auth.currentUser.uid
+                        }).then(() => {
+                            location.reload();
                         });
+                    }).catch(err => {
+                        alert(err.message);
                     });
                     showLoadingAnim();
                 }
@@ -262,15 +275,20 @@ function preload() {
                         database.ref("Users/" + auth.currentUser.uid).get().then((data) => {
                             var allUserData = data.val();
                             plrName = allUserData.name;
-                        });
-                    });
+                        }).then(() => {
+                            location.reload();
+                        })
+                    }).catch(err => {
+                        alert(err.message);
+                    });;
+                    showSignedInOpts = false;
                 }
                 else {
-                    notify("Please fill up all the text areas to continue..", "red", "blue", true);
-                    alert("Please fill up all the text areas to continue..");
+                    notify("Please fill up all the details to continue..", "red", "blue", true);
+                    alert("Please fill up all the details to continue..");
                 }
             });
-            document.getElementById("eml.box").focus();
+            document.getElementById("eml-box").focus();
         }
     }
 
@@ -308,6 +326,7 @@ function preload() {
                         console.log(reservedNames);
                         updateReservedNames();
                         guestContinue();
+                        console.log("data exists");
                     }
                 }
                 else {
@@ -317,6 +336,7 @@ function preload() {
                     console.log(reservedNames);
                     updateReservedNames();
                     guestContinue();
+                    console.log("data does not exist");
                 }
             }).catch(function (error) {
                 console.error(error);
@@ -384,13 +404,9 @@ function preload() {
         striker.rotateToDirection = true;
         striker.friction = 0.018;
         striker.points = -10;
-        striker.restitution = 0.08;
+        striker.restitution = 0.25;
         striker.setCollider("circle");
         striker.addImage(strikerImg);
-        // striker2 = createSprite(300, 650);
-        // striker2.rotation = -90;
-        // striker2.depth = 1;
-        // striker2.addImage(strikerImg);
 
         oppStriker = createSprite(300, 65);
         oppStriker.rotation = 90;
@@ -398,7 +414,7 @@ function preload() {
         oppStriker.friction = 0.018;
         oppStriker.points = -10;
         oppStriker.tint = "lightred";
-        oppStriker.restitution = 0.08;
+        oppStriker.restitution = 0.25;
         oppStriker.setCollider("circle");
         oppStriker.addImage(strikerImg);
         // Coins
@@ -453,7 +469,7 @@ function preload() {
             spr.addImage(blackImg);
             coins.add(spr);
             spr.setCollider("circle", 0, 0, 12);
-            spr.restitution = 0.08;
+            spr.restitution = 0.25;
             spr.friction = 0.03;
             spr.points = 10;
         }
@@ -464,7 +480,7 @@ function preload() {
             coins.add(spr);
             spr.setCollider("circle", 0, 0, 12);
             spr.friction = 0.03;
-            spr.restitution = 0.08;
+            spr.restitution = 0.25;
             spr.points = 20;
         }
 
@@ -475,7 +491,7 @@ function preload() {
         queen.name = "queen";
         queen.setCollider("circle", 0, 0, 12);
         queen.friction = 0.03;
-        queen.restitution = 0.08;
+        queen.restitution = 0.25;
 
         ellipse_pos = {
             x: [0, 0, 600, 600,
@@ -502,15 +518,14 @@ function preload() {
         thinBand.shapeColor = "black";
         thinBand.depth = -1;
 
-        shootBtn = createButton("Shoot").attribute("class", "button").style("width", "80px").style("height", "50px").style("font-size", "20px").style("background-color", "red").position(270, 730).mousePressed(() => {
+        shootBtn = createButton("Shoot").attribute("class", "button").style("width", "80px").style("height", "50px").style("font-size", "20px").style("background-color", "red").position(270, 700).mousePressed(() => {
             if (strikerReady && !mouseDown()) {
                 shoot();
             }
         });
-
-        speedSlider = createSlider(0, 55, 20).position(127.5, 742.5).changed(() => {
-            selectedSpeed = speedSlider.value();
+        speedSlider = createSlider(0, 55, 20).position(127.5, 712.5).changed(() => {
+            selectedSpeed = parseInt(speedSlider.elt.value);
         });
-        selectedSpeed = speedSlider.value();
+        selectedSpeed = speedSlider.elt.value;
     }
 }
