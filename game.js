@@ -6,6 +6,13 @@ function draw() {
     gameControls();
     loginStatus();
 
+    if (strikerShoot) {
+        console.log("Angle: " + striker.rotation + " and speed: " + striker.getSpeed());
+    } else if(otherPlrShooting) {
+        console.log("Opp Angle: " + oppStriker.rotation + " and Opp speed: " + oppStriker.getSpeed());
+
+    }
+
     if (playerCount === 2 && playClicked) {
         startPlaying();
         startGame();
@@ -196,7 +203,8 @@ function checkifGameStartedAndOtherPlrDataNotAvail() {
 }
 
 function gamePlay() {
-    getOpponentsShootingData();
+    setOpponentStrikerPostion();
+    imitateOpponentsShot();
     //getOppsShoot();
     // checkifGameStatedAndOtherPlrDataNotAvail();
     // if (!otherPlrExists) {
@@ -227,9 +235,6 @@ function gamePlay() {
         }
     }
 
-    if (opposAngle) {
-        oppStriker.rotation = opposAngle + 180;
-    }
     for (let j = 0; j < strip_pos.x.length; j++) {
         push();
         fill("black");
@@ -384,5 +389,8 @@ function isMyTurn() {
 }
 
 function switchTurn() {
-
+    strikerShoot = false;
+    database.ref("Playing/" + plrName).update({
+        shooting: false
+    });
 }

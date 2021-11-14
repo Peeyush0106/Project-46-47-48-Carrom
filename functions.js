@@ -275,7 +275,7 @@ function shoot() {
 
 async function updateMyShoot() {
     database.ref("Playing/" + plrName).update({
-        shooting: strikerShoot
+        shooting: true
     });
 }
 
@@ -285,7 +285,8 @@ async function updateStatus() {
             score: points,
             angle: striker.rotation,
             name: plrName,
-            speed: selectedSpeed
+            speed: selectedSpeed,
+            posX: striker.x
         });
         if (plrIndex >= 0 && plrIndex <= 1) {
             database.ref("Playing/" + plrName).update({
@@ -314,23 +315,39 @@ async function getPlayerData() {
     });
 }
 
-function getOpponentsShootingData() {
-    if (allPlrData && otherPlrName) {
-        otherPlrShooting = allPlrData[otherPlrName].shooting;
-        if (!otherPlrShooting) {
+function setOpponentStrikerPostion() {        
+    if (allPlrData && otherPlrName && allPlrData[otherPlrName]) {
+
+        if(!otherPlrShooting && allPlrData[otherPlrName].shooting) {
+            otherPlrPlayedShot = true;
+            otherPlrShooting = allPlrData[otherPlrName].shooting;
+        }
+        
+        if(otherPlrShooting == undefined || !otherPlrShooting) {
             opposAngle = allPlrData[otherPlrName].angle;
             otherPlrSpeed = allPlrData[otherPlrName].speed;
+            otherPlrPosX = 600 - allPlrData[otherPlrName].posX;
 
-            if (otherPlrShooting) {
-                oppStriker.setSpeedAndDirection(otherPlrSpeed);
-                database.ref("Playing/" + otherPlrName).update({
-                    shooting: false
-                });
-            }
             if (!allPlrData[otherPlrName].chance) {
                 oppStriker.x = 300;
+                oppStriker.y = 65;                
+            } else {
+                oppStriker.x = otherPlrPosX;
                 oppStriker.y = 65;
+                oppStriker.rotation = opposAngle + 180;                
             }
+        } else {
+            otherPlrShooting = allPlrData[otherPlrName].shooting;
+        }
+    }
+}
+
+function imitateOpponentsShot() {
+    if (allPlrData && otherPlrName && allPlrData[otherPlrName]) {        
+        if (otherPlrPlayedShot) {
+            //console.log();
+            oppStriker.setSpeedAndDirection(otherPlrSpeed);
+            otherPlrPlayedShot = false;
         }
     }
 }
